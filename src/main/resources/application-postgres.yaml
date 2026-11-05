@@ -1,0 +1,7 @@
+# Activate with SPRING_PROFILES_ACTIVE=postgres. All three variables are required;
+# the application fails fast at startup if one is missing.
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    # Default profile: in-memory H2 in PostgreSQL compatibility mode, so the same
+    # Flyway migration runs locally, in tests and against the real PostgreSQL.
+    url: jdbc:h2:mem:orders;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks that the mapping matches it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        # Loads order lines for a page of orders in batches instead of one query per order.
+        default_batch_fetch_size: 50
+  flyway:
+    locations: classpath:db/migration
+
+server:
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+logging:
+  pattern:
+    # Adds the request id (set by RequestIdFilter in the MDC) to every log line.
+    level: "%5p [req=%X{requestId:-}]"
