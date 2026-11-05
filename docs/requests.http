@@ -1,0 +1,40 @@
+### Create an order (repeat this request: same key, same body -> 200 + Idempotent-Replayed)
+POST http://localhost:8080/orders
+Content-Type: application/json
+Idempotency-Key: demo-1
+
+{"customerId":"cust-42","lines":[{"sku":"BOOK-1","description":"Exercise book","quantity":2,"unitPrice":"10.00"},{"sku":"PEN-1","description":"Pen","quantity":3,"unitPrice":"4.50"}]}
+
+### Same key, different body -> 422
+POST http://localhost:8080/orders
+Content-Type: application/json
+Idempotency-Key: demo-1
+
+{"customerId":"cust-42","lines":[{"sku":"BOOK-1","description":"Exercise book","quantity":5,"unitPrice":"10.00"}]}
+
+### Get it (replace the id); the ETag header is the version
+GET http://localhost:8080/orders/{{id}}
+
+### Replace lines on a draft, with the version from the ETag
+PUT http://localhost:8080/orders/{{id}}/lines
+Content-Type: application/json
+If-Match: "0"
+
+{"lines":[{"sku":"RULER-1","description":"Ruler","quantity":1,"unitPrice":"25.00"}]}
+
+### Same request again: If-Match "0" is now stale -> 412
+PUT http://localhost:8080/orders/{{id}}/lines
+Content-Type: application/json
+If-Match: "0"
+
+{"lines":[{"sku":"RULER-1","description":"Ruler","quantity":1,"unitPrice":"99.00"}]}
+
+### Lifecycle
+POST http://localhost:8080/orders/{{id}}/confirm
+###
+POST http://localhost:8080/orders/{{id}}/fulfil
+### Not allowed from FULFILLED -> 409 naming the current status
+POST http://localhost:8080/orders/{{id}}/cancel
+
+### List, filtered and paged
+GET http://localhost:8080/orders?customerId=cust-42&status=FULFILLED&page=0&size=20
